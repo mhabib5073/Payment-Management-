@@ -1,0 +1,41 @@
+from typing import Literal
+
+from fastapi import APIRouter, Depends, Query, status
+
+from app.api.dependencies import get_employee_service
+from app.schemas import EmployeeCreate, EmployeeOut, EmployeePage, EmployeeUpdate, SortField
+from app.services.employee_service import EmployeeService
+
+router = APIRouter(prefix="/api/employees", tags=["Employees"])
+
+@router.get("", response_model=EmployeePage)
+def list_employees(search: str | None = Query(None, max_length=100),country: str | None = None,
+    department: str | None = None,
+    job_title: str | None = None,
+    sort: SortField = "name",
+    order: Literal["asc", "desc"] = "asc",
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    service: EmployeeService = Depends(get_employee_service),
+):
+    items, total = service.search(
+        search=search, country=country, department=department, job_title=job_title,
+        sort=sort, order=order, page=page, page_size=page_size,
+    )
+    return EmployeePage(items=items, total=total, page=page, page_size=page_size)
+
+@router.get("/{employee_id}", response_model=EmployeeOut)
+def get_employee(employee_id: int, service: EmployeeService = Depends(get_employee_service)):
+    return service.get(employee_id)
+
+@router.post("", response_model=EmployeeOut, status_code=status.HTTP_201_CREATED)
+def create_employee(data: EmployeeCreate, service: EmployeeService = Depends(get_employee_service)):
+    return service.create(data)
+@router.patch("/{employee_id}", response_model=EmployeeOut)
+def update_employee(
+    employee_id: int, data: EmployeeUpdate, service: EmployeeService = Depends(get_employee_service)
+):
+    return service.update(employee_id, data)
+@router.delete("/{employee_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_employee(employee_id: int, service: EmployeeService = Depends(get_employee_service)):
+    service.delete(employee_id)
