@@ -1,5 +1,6 @@
 from datetime import date
 from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 SortField = Literal["name", "salary", "hire_date", "country", "job_title"]
