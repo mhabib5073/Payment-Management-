@@ -1,35 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// frontend/src/App.tsx
+import { App as AntApp, Layout, Result, Spin, Tabs, Typography } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
+import { api, type Meta } from './api'
+import { EmployeesPage } from './pages/EmployeesPage'
+import { InsightsPage } from './pages/InsightsPage'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const { message } = AntApp.useApp()
+  const [meta, setMeta] = useState<Meta | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const loadMeta = useCallback(() => {
+    api.meta().then(setMeta).catch((e) => setError(e.message))
+  }, [])
+
+  useEffect(loadMeta, [loadMeta])
+
+  const onDataChanged = () => {
+    setRefreshKey((k) => k + 1) // refresh insights
+    loadMeta() // new job titles appear in dropdowns
+  }
+
+  if (error) return <Result status="error" title="Cannot reach the API" subTitle={error} />
+  if (!meta) return <Spin size="large" style={{ display: 'block', marginTop: 120 }} />
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Layout.Header style={{ display: 'flex', alignItems: 'center' }}>
+        <Typography.Title level={4} style={{ color: '#fff', margin: 0 }}>
+          ACME Salary Management
+        </Typography.Title>
+      </Layout.Header>
+      <Layout.Content style={{ padding: 24 }}>
+        <Tabs
+          items={[
+            { key: 'employees', label: 'Employees', children: <EmployeesPage meta={meta} onDataChanged={onDataChanged} /> },
+            { key: 'insights', label: 'Insights', children: <InsightsPage meta={meta} refreshKey={refreshKey} /> },
+          ]}
+          onChange={() => message.destroy()}
+        />
+      </Layout.Content>
+    </Layout>
   )
 }
-
-export default App
