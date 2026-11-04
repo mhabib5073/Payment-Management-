@@ -5,8 +5,8 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 
+from app.api import auth, employees, insights
 from app import models  # noqa: F401  (registers tables)
-from app.api import employees, insights
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine
 from app.models import Employee
@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
     def health():
         return {"status": "ok"}
 
+    app.include_router(auth.router)
     app.include_router(employees.router)
     app.include_router(insights.router)
 
