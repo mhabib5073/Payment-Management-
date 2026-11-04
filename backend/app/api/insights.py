@@ -2,7 +2,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends
 
-from app.api.dependencies import get_insights_service, get_repo, require_manager
+from app.api.dependencies import get_insights_service, get_repo, require_manager,get_current_user
 
 from app.constants import COUNTRY_CURRENCY, DEPARTMENTS
 from app.repositories.employee_repository import EmployeeRepository

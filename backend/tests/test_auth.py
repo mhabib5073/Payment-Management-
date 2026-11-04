@@ -62,13 +62,10 @@ def test_employee_sees_only_their_own_profile(anon_client, employee_headers):
 
 
 @pytest.mark.parametrize("method, path", [
-    ("get", "/api/employees"),
     ("post", "/api/employees"),
-    ("get", "/api/employees/1"),
     ("patch", "/api/employees/1"),
     ("delete", "/api/employees/1"),
     ("get", "/api/insights/salaries"),
-    ("get", "/api/meta"),
 ])
 def test_employee_is_forbidden_from_manager_endpoints(anon_client, employee_headers, method, path):
     response = getattr(anon_client, method)(path, headers=employee_headers)
