@@ -12,3 +12,6 @@ COUNTRY_CURRENCY: dict[str, str] = {
 }
 
 DEPARTMENTS = ["Engineering", "Product", "Sales", "Marketing", "Finance", "HR", "Operations", "Support"]
+MANAGER = "manager"
+EMPLOYEE = "employee"
+ROLES = (MANAGER, EMPLOYEE)

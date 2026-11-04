@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     seed_on_startup: bool = False  
     static_dir: str | None = None
+    jwt_secret: str = "dev-only-secret-change-me"  
+    access_token_minutes: int = 60
+    bcrypt_rounds: int = 12  
 
 @lru_cache
 def get_settings() -> Settings:
