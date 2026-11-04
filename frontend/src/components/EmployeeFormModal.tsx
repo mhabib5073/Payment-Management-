@@ -21,10 +21,13 @@ export function EmployeeFormModal({ open, employee, meta, saving, onCancel, onSu
 
   useEffect(() => {
     if (!open) return
-    if (employee) form.setFieldsValue({ ...employee, hire_date: dayjs(employee.hire_date) })
-    else form.resetFields()
+    if (employee) {
+      form.setFieldsValue({ ...employee, salary: employee.salary ?? undefined, hire_date: dayjs(employee.hire_date) })
+    } else {
+      form.resetFields()
+    }
   }, [open, employee, form])
-
+  
   const submit = (values: FormValues) => onSubmit({ ...values, hire_date: values.hire_date.format('YYYY-MM-DD') })
 
   return (

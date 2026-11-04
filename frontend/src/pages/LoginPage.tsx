@@ -1,4 +1,5 @@
-import { Alert, Button, Card, Form, Input, Tabs, Typography } from 'antd'
+import { BarChartOutlined, LockOutlined, MailOutlined, SafetyOutlined, TeamOutlined } from '@ant-design/icons'
+import { Alert, Button, Card, Divider, Form, Input, Space, Tabs, Typography } from 'antd'
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 
@@ -6,6 +7,17 @@ interface Credentials {
   email: string
   password: string
 }
+
+const DEMO = {
+  manager: { email: 'hr.manager@acme.com', password: 'Manager@123' },
+  employee: { email: 'demo.employee@acme.com', password: 'Employee@123' },
+}
+
+const FEATURES = [
+  { icon: <TeamOutlined />, text: '10,000 employees across 8 countries, searchable in milliseconds' },
+  { icon: <BarChartOutlined />, text: 'Pay ranges by country, job title and department' },
+  { icon: <SafetyOutlined />, text: 'Role-based access: salaries stay private' },
+]
 
 export function LoginPage() {
   const { login, register } = useAuth()
@@ -25,46 +37,57 @@ export function LoginPage() {
   }
 
   const loginForm = (
-    <Form<Credentials> layout="vertical" onFinish={(v) => run(() => login(v.email, v.password))}>
-      <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-        <Input autoComplete="username" />
+    <Form<Credentials> layout="vertical" size="large" onFinish={(v) => run(() => login(v.email, v.password))}>
+      <Form.Item name="email" rules={[{ required: true, type: 'email' }]}>
+        <Input prefix={<MailOutlined />} placeholder="Work email" autoComplete="username" />
       </Form.Item>
-      <Form.Item name="password" label="Password" rules={[{ required: true }]}>
-        <Input.Password autoComplete="current-password" />
+      <Form.Item name="password" rules={[{ required: true }]}>
+        <Input.Password prefix={<LockOutlined />} placeholder="Password" autoComplete="current-password" />
       </Form.Item>
       <Button type="primary" htmlType="submit" loading={busy} block>
         Log in
       </Button>
+      <Divider plain>
+        <Typography.Text type="secondary">or try a demo account</Typography.Text>
+      </Divider>
+      <Space style={{ width: '100%' }} direction="vertical">
+        <Button block disabled={busy} onClick={() => run(() => login(DEMO.manager.email, DEMO.manager.password))}>
+          Continue as HR manager
+        </Button>
+        <Button block disabled={busy} onClick={() => run(() => login(DEMO.employee.email, DEMO.employee.password))}>
+          Continue as employee
+        </Button>
+      </Space>
     </Form>
   )
 
   const registerForm = (
     <Form<Credentials & { confirm: string }>
       layout="vertical"
+      size="large"
       onFinish={(v) => run(() => register(v.email, v.password))}
     >
       <Typography.Paragraph type="secondary">
-        Use the work email HR has on record. Manager accounts are created by HR, not here.
+        Use the work email HR has on record. Manager accounts are created by HR.
       </Typography.Paragraph>
-      <Form.Item name="email" label="Work email" rules={[{ required: true, type: 'email' }]}>
-        <Input autoComplete="username" />
+      <Form.Item name="email" rules={[{ required: true, type: 'email' }]}>
+        <Input prefix={<MailOutlined />} placeholder="Work email" autoComplete="username" />
       </Form.Item>
-      <Form.Item name="password" label="Password" rules={[{ required: true, min: 8, max: 72 }]}>
-        <Input.Password autoComplete="new-password" />
+      <Form.Item name="password" rules={[{ required: true, min: 8, max: 72 }]}>
+        <Input.Password prefix={<LockOutlined />} placeholder="Password (8+ characters)" autoComplete="new-password" />
       </Form.Item>
       <Form.Item
         name="confirm"
-        label="Confirm password"
         dependencies={['password']}
         rules={[
-          { required: true },
+          { required: true, message: 'Please confirm your password' },
           ({ getFieldValue }) => ({
             validator: (_, value) =>
               value === getFieldValue('password') ? Promise.resolve() : Promise.reject(new Error('Passwords differ')),
           }),
         ]}
       >
-        <Input.Password autoComplete="new-password" />
+        <Input.Password prefix={<LockOutlined />} placeholder="Confirm password" autoComplete="new-password" />
       </Form.Item>
       <Button type="primary" htmlType="submit" loading={busy} block>
         Create account
@@ -73,21 +96,36 @@ export function LoginPage() {
   )
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-      <Card style={{ width: 400 }}>
-        <Typography.Title level={3} style={{ textAlign: 'center' }}>
-          ACME Salary Management
-        </Typography.Title>
-        {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-        <Tabs
-          centered
-          onChange={() => setError(null)}
-          items={[
-            { key: 'login', label: 'Log in', children: loginForm },
-            { key: 'register', label: 'Register', children: registerForm },
-          ]}
-        />
-      </Card>
+    <div className="login-screen">
+      <section className="login-brand">
+        <Typography.Title style={{ color: '#fff', marginBottom: 8 }}>ACME People</Typography.Title>
+        <Typography.Paragraph style={{ color: 'rgba(255,255,255,0.85)', fontSize: 18, maxWidth: 420 }}>
+          Salary management for HR, without the spreadsheets.
+        </Typography.Paragraph>
+        <Space direction="vertical" size="middle" style={{ marginTop: 24 }}>
+          {FEATURES.map((f) => (
+            <Space key={f.text} align="start" style={{ color: '#fff', fontSize: 15 }}>
+              <span className="login-feature-icon">{f.icon}</span>
+              <span>{f.text}</span>
+            </Space>
+          ))}
+        </Space>
+      </section>
+      <section className="login-form">
+        <Card style={{ width: '100%', maxWidth: 400 }} variant="borderless">
+          <Typography.Title level={3} style={{ marginTop: 0 }}>
+            Welcome back
+          </Typography.Title>
+          {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
+          <Tabs
+            onChange={() => setError(null)}
+            items={[
+              { key: 'login', label: 'Log in', children: loginForm },
+              { key: 'register', label: 'Register', children: registerForm },
+            ]}
+          />
+        </Card>
+      </section>
     </div>
   )
 }

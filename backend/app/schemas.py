@@ -86,6 +86,26 @@ class EmployeePage(BaseModel):
     page: int
     page_size: int
 
+class EmployeeView(BaseModel):
+    """What a GET returns. `salary` is None when the viewer may not see it."""
+
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    job_title: str
+    department: str
+    country: str
+    currency: str
+    hire_date: date
+    salary: int | None
+
+
+class EmployeeViewPage(BaseModel):
+    items: list[EmployeeView]
+    total: int
+    page: int
+    page_size: int
 
 class SalaryStats(BaseModel):
     group: str
