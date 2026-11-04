@@ -8,11 +8,16 @@ import time
 from datetime import date, timedelta
 
 from sqlalchemy import insert
+from app import models  
 
-from app import models  # noqa: F401
-from app.constants import COUNTRY_CURRENCY
+from app.database import Base, SessionLocal, engine
+
+from app.constants import COUNTRY_CURRENCY, EMPLOYEE, MANAGER
 from app.database import Base, SessionLocal, engine
 from app.models import Employee
+from app.repositories.employee_repository import EmployeeRepository
+from app.repositories.user_repository import UserRepository
+from app.services.auth_service import AuthService
 
 FIRST_NAMES = [
     "Aarav", "Aditi", "Amit", "Ananya", "Arjun", "Diya", "Ishaan", "Kavya", "Priya", "Rahul",
@@ -82,17 +87,32 @@ def generate_employees(count: int, seed: int = 42, today: date | None = None) ->
         })
     return rows
 
+DEMO_USERS = [
+    {"role": MANAGER, "password": "Manager@123", "employee": {
+        "first_name": "Hema", "last_name": "Rao", "email": "hr.manager@acme.com",
+        "job_title": "HR Manager", "department": "HR", "country": "India", "currency": "INR",
+        "salary": 3_200_000, "hire_date": date(2018, 6, 1)}},
+    {"role": EMPLOYEE, "password": "Employee@123", "employee": {
+        "first_name": "Ravi", "last_name": "Kumar", "email": "demo.employee@acme.com",
+        "job_title": "Software Engineer", "department": "Engineering", "country": "India",
+        "currency": "INR", "salary": 2_100_000, "hire_date": date(2022, 3, 14)}},
+]
 
 def seed(count: int, seed_value: int, reset: bool, batch_size: int = 1000) -> None:
     if reset:
         Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     rows = generate_employees(count, seed_value)
+    # the first rows become the demo people, so the total stays exactly `count`
+    for i, demo in enumerate(DEMO_USERS[: len(rows)]):
+        rows[i] = demo["employee"]
     with SessionLocal() as db:
         for start in range(0, len(rows), batch_size):
             db.execute(insert(Employee), rows[start:start + batch_size])  # bulk insert
         db.commit()
-
+        auth = AuthService(UserRepository(db), EmployeeRepository(db))
+        for demo in DEMO_USERS[: len(rows)]:
+            auth.create_user(demo["employee"]["email"], demo["password"], demo["role"])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Seed employees")

@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 SortField = Literal["name", "salary", "hire_date", "country", "job_title"]
 
+Role = Literal["manager", "employee"]
+
 class EmployeeBase(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
@@ -48,6 +50,35 @@ class EmployeeOut(EmployeeBase):
     id: int
     currency: str
 
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=72)  # bcrypt uses at most 72 bytes
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(max_length=72)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    role: Role
+
+
+class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: str
+    role: Role
+    employee_id: int | None
+
+
+class MeResponse(BaseModel):
+    user: UserOut
+    profile: EmployeeOut | None
 
 class EmployeePage(BaseModel):
     items: list[EmployeeOut]

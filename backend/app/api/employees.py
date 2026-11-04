@@ -2,11 +2,13 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.api.dependencies import get_employee_service
+from app.api.dependencies import get_employee_service, require_manager
+
 from app.schemas import EmployeeCreate, EmployeeOut, EmployeePage, EmployeeUpdate, SortField
 from app.services.employee_service import EmployeeService
 
-router = APIRouter(prefix="/api/employees", tags=["Employees"])
+
+router = APIRouter(prefix="/api/employees", tags=["Employees"], dependencies=[Depends(require_manager)])
 
 @router.get("", response_model=EmployeePage)
 def list_employees(search: str | None = Query(None, max_length=100),country: str | None = None,

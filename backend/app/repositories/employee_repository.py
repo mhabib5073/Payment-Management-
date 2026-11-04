@@ -1,7 +1,9 @@
-from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
 
-from app.models import Employee
+from sqlalchemy.orm import Session
+from sqlalchemy import delete, func, or_, select
+
+from app.models import Employee, User
+
 
 SORT_COLUMNS = {
     "name": (Employee.last_name, Employee.first_name),
@@ -36,6 +38,8 @@ class EmployeeRepository:
         return employee
 
     def delete(self, employee: Employee) -> None:
+        # an employee who leaves must not keep a working login
+        self.db.execute(delete(User).where(User.employee_id == employee.id))
         self.db.delete(employee)
         self.db.commit()
     def search(

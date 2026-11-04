@@ -2,13 +2,15 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends
 
-from app.api.dependencies import get_insights_service, get_repo
+from app.api.dependencies import get_insights_service, get_repo, require_manager
+
 from app.constants import COUNTRY_CURRENCY, DEPARTMENTS
 from app.repositories.employee_repository import EmployeeRepository
 from app.schemas import Meta, SalaryStats
 from app.services.insights_service import InsightsService
 
-router = APIRouter(prefix="/api", tags=["Insights"])
+
+router = APIRouter(prefix="/api", tags=["Insights"], dependencies=[Depends(require_manager)])
 
 @router.get("/insights/salaries", response_model=list[SalaryStats])
 def salary_insights(
