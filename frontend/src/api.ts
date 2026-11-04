@@ -1,3 +1,24 @@
+export type Role = 'manager' | 'employee'
+
+export interface User {
+  id: number
+  email: string
+  role: Role
+  employee_id: number | null
+}
+
+export interface Me {
+  user: User
+  profile: Employee | null
+}
+
+export interface TokenResponse {
+  access_token: string
+  token_type: string
+  expires_in: number
+  role: Role
+}
+
 export interface Employee {
   id: number
   first_name: string
@@ -48,6 +69,21 @@ export interface EmployeeQuery {
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
+const TOKEN_KEY = 'salary.token'
+
+// --- token storage (localStorage survives page reloads) ---
+export const tokenStore = {
+  get: (): string | null => (typeof localStorage === 'undefined' ? null : localStorage.getItem(TOKEN_KEY)),
+  set: (token: string) => localStorage.setItem(TOKEN_KEY, token),
+  clear: () => localStorage.removeItem(TOKEN_KEY),
+}
+
+// Called when the API says the token is no longer valid (AuthProvider logs the user out)
+let onUnauthorized: () => void = () => {}
+export function setUnauthorizedHandler(handler: () => void) {
+  onUnauthorized = handler
+}
+
 export function buildQuery(params: object): string {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
   const query = new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString()
@@ -66,10 +102,15 @@ export function errorMessage(detail: unknown, fallback: string): string {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = tokenStore.get()
   const response = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   })
+  if (response.status === 401 && token) onUnauthorized()
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
     throw new Error(errorMessage(body.detail, response.statusText))
@@ -77,7 +118,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.status === 204 ? (undefined as T) : response.json()
 }
 
+
 export const api = {
+  login: (email: string, password: string) =>
+    request<TokenResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (email: string, password: string) =>
+    request<User>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  me: () => request<Me>('/api/auth/me'),
   listEmployees: (query: EmployeeQuery) => request<EmployeePage>(`/api/employees${buildQuery(query)}`),
   createEmployee: (data: EmployeeInput) =>
     request<Employee>('/api/employees', { method: 'POST', body: JSON.stringify(data) }),
