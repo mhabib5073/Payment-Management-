@@ -15,4 +15,6 @@ DEMO_USERS = [
         "job_title": "Software Engineer", "department": "Engineering", "country": "India",
         "currency": "INR", "salary": 2_100_000, "hire_date": date(2022, 3, 14)}},
 ]
+<img width="1912" height="816" alt="image" src="https://github.com/user-attachments/assets/23d30c4c-114b-4239-bd45-6bc69d202b0d" />
+
 
